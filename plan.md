@@ -116,9 +116,23 @@ Each step is built end-to-end (code + commit + push) before the next
 starts — treat this file as the single handoff artifact between build
 sessions.
 
-- [ ] **Step 1 — Scaffold.** Vite React-TS app, Tailwind config,
+- [x] **Step 1 — Scaffold.** Vite React-TS app, Tailwind config,
   `lucide-react`, base layout (header + tab nav + content) styled per
   the template.
+  Built by scaffolding into a temp dir (`npm create vite@latest . --template react-ts`
+  needed `--overwrite` for a non-empty dir, not `--force`; scaffolded to a
+  temp dir and merged instead to avoid any risk to existing files), then
+  installed Tailwind CSS v4 via `@tailwindcss/vite` + `lucide-react`.
+  Deviation: the auto-installed `vite@8.3.0` uses a rolldown bundler
+  requiring Node ≥20.19/22.12 and failed to build on this machine's Node
+  20.17 (missing native binding); downgraded to `vite@6.4.3` +
+  `@vitejs/plugin-react@4.7.0`, a stable pairing that builds and runs
+  cleanly on this Node version. `App.tsx` now renders the dark
+  slate-950/900/800 + sky/amber themed header, current-week placeholder,
+  and a 9-tab nav bar (Dashboard/Weekly Plan/Python Warm-up/Skills/Side
+  Projects/Applications/Interview Mocks/Portfolio/Settings) with a
+  per-tab "coming in Step N" placeholder content area; `npm run dev` and
+  `npm run build` both verified working.
 - [ ] **Step 2 — Data layer.** `types.ts`, `seed.ts`, `storage.ts`,
   `state.ts`.
 - [ ] **Step 3 — Dashboard.** Progress bar, current-week indicator,
