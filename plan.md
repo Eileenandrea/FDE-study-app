@@ -278,10 +278,47 @@ sessions.
   console errors, and the change persisted correctly across a full page
   reload; toggled it back off afterward to leave state clean. Dev server
   stopped afterward.
-- [ ] **Step 8 — Job Applications.** Add form + table/list, status
+- [x] **Step 8 — Job Applications.** Add form + table/list, status
   `<select>`, sort by date desc, the "Applications typically start
   Week 11" notice gated on `currentWeek < 11` (per `CLAUDE.md`, not the
   template's 12).
+  Built `src/views/JobApplications.tsx` styled after the template's
+  APPLICATIONS tab: an add form (company/role/date-applied/status inputs
+  in a row, plus a notes textarea) that validates non-empty
+  company/role, defaults `dateApplied` to today (computed from local
+  date parts, not `toISOString` UTC, to avoid an off-by-one near
+  midnight) and `status` to `'applied'`, then calls `state.ts`'s
+  existing `addJobApplication` via `updateState` (synchronous save) and
+  resets the form. Logged applications render as rows sorted by
+  `dateApplied` descending (`localeCompare` on the ISO strings, no extra
+  helper needed), each with a status `<select>` tinted per status
+  (sky/amber/emerald/rose, mirroring `Skills.tsx`'s status-chip color
+  convention) wired to `updateJobApplication` (synchronous), a delete
+  button wired to `removeJobApplication` (synchronous), and a per-row
+  notes textarea (`ApplicationNotesField`, a local component copying
+  `WeeklyPlan.tsx`'s `WeekNotesField` debounce pattern verbatim — local
+  state for instant keystrokes, ~400ms debounced `saveState` via
+  `updateJobApplication`) since `JobApplication.notes` is part of the
+  data model and editable-after-the-fact notes seemed worth the small
+  extra surface even though `CLAUDE.md` only explicitly called out
+  status as row-editable. The early-applications note is gated on
+  `currentWeek === null || currentWeek < 11`, showing it when
+  `startDate` is unset too since the user "clearly hasn't started yet"
+  per the step brief. Wired into `App.tsx`'s job-applications tab slot,
+  replacing the placeholder. `npx tsc -b` and `npm run build` both pass
+  clean. Verified with a Playwright smoke script against the dev
+  server: empty-state message and the Week-11 note both render
+  initially, submitting the add form with two applications (different
+  dates) produced correctly-sorted rows (most recent first), changing a
+  row's status via its `<select>` and reloading confirmed the status
+  persisted through `localStorage`, and deleting both test rows restored
+  the empty-state message with zero console errors throughout. (First
+  test run flagged a false positive — my Playwright script's own
+  `select` index was off because the add-form's status `<select>` is
+  also in the DOM; fixed the script, not the app, and reran clean.) Dev
+  server was stopped by locating its specific PID via `netstat` and
+  killing only that PID (a bare `taskkill /IM node.exe` was correctly
+  blocked as too broad).
 - [ ] **Step 9 — Interview Mocks.** Add form + log list + running
   counts by type.
 - [ ] **Step 10 — Portfolio Artifacts.** Checklist with editable URL
