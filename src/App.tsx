@@ -18,6 +18,7 @@ import PythonWarmup from './views/PythonWarmup'
 import Skills from './views/Skills'
 import SideProjects from './views/SideProjects'
 import JobApplications from './views/JobApplications'
+import InterviewMocks from './views/InterviewMocks'
 
 interface Tab {
   id: string
@@ -120,6 +121,8 @@ function App() {
             <SideProjects state={state} updateState={updateState} />
           ) : active.id === 'job-applications' ? (
             <JobApplications state={state} updateState={updateState} />
+          ) : active.id === 'interview-mocks' ? (
+            <InterviewMocks state={state} updateState={updateState} />
           ) : (
             <div className="rounded-lg border border-slate-800 bg-slate-900 p-6">
               <p className="font-mono text-xs uppercase tracking-wide text-amber-400">

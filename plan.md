@@ -319,8 +319,40 @@ sessions.
   server was stopped by locating its specific PID via `netstat` and
   killing only that PID (a bare `taskkill /IM node.exe` was correctly
   blocked as too broad).
-- [ ] **Step 9 — Interview Mocks.** Add form + log list + running
+- [x] **Step 9 — Interview Mocks.** Add form + log list + running
   counts by type.
+  Built `src/views/InterviewMocks.tsx` styled after `JobApplications.tsx`'s
+  conventions (add-form-above-list layout, `todayISO()` local-date helper,
+  status/type color chips) rather than the JSX template's minimal
+  type+date-only mock section, since `CLAUDE.md`'s `InterviewMock` type
+  also needs `week` and `notes` captured. The add form has a week number
+  input (defaults to `currentWeekFromStartDate` via `lib/date.ts`,
+  falling back to `1` when `startDate` is unset, per the step brief),
+  a type `<select>` (decomposition/solution-design/deep-dive/take-home/
+  other, colored sky/amber/emerald/rose/slate mirroring
+  `JobApplications.tsx`'s status-chip palette), a date input defaulting
+  to today, and a notes textarea, all wired to `state.ts`'s existing
+  `addInterviewMock` via `updateState` (synchronous save). Judgment
+  call: unlike Job Applications, `CLAUDE.md`'s spec for this feature
+  doesn't call out post-log editing, and `state.ts` only has
+  `addInterviewMock`/`removeInterviewMock` (no update reducer), so notes
+  are captured at add-time only and rendered read-only per row — no new
+  reducer was added to keep this step's diff scoped to the Interview
+  Mocks feature. Logged mocks render sorted by date descending (same
+  `localeCompare` sort as Job Applications), each row showing week, a
+  type chip, date, notes (if any), and a delete button wired to
+  `removeInterviewMock`. A running tally ("Decomposition: 2 · Solution
+  design: 1 · ...") always shows all five types, including zero counts,
+  computed inline via `reduce` (no new shared component). Wired into
+  `App.tsx`'s interview-mocks tab slot, replacing the placeholder.
+  `npx tsc -b` and `npm run build` both pass clean. Verified with a
+  Playwright smoke script against the dev server: empty state renders
+  initially, logging a Week 9 solution-design mock with notes produced
+  the correct row and bumped the "Solution design" tally from 0 to 1,
+  both the logged mock and its tally count persisted across a full page
+  reload, and deleting it restored the empty state — persisting
+  correctly across another reload — with zero console errors throughout.
+  Dev server was stopped via its specific PID from `netstat`.
 - [ ] **Step 10 — Portfolio Artifacts.** Checklist with editable URL
   inputs, styled after template's Portfolio tab.
 - [ ] **Step 11 — Settings.** Start-date picker, two-step "reset all
