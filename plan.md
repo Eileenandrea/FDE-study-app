@@ -237,10 +237,28 @@ sessions.
   4-day run done from a simulated start date, → 2 after un-marking a
   middle day, confirming the backward-walk-and-break logic). Dev
   server stopped afterward.
-- [ ] **Step 6 — Skills.** Cards styled after template's Skills tab;
+- [x] **Step 6 — Skills.** Cards styled after template's Skills tab;
   status chip cycles not_started → in_progress → done; "stop learning
   when" shown as a highlighted quote line (template's italic bordered
   `<p>`).
+  Built `src/views/Skills.tsx` as a 2-column card grid mirroring the
+  template exactly: each card has a name/status-chip header row, the
+  `primaryCourse` in muted text, and `stopLearningWhen` as an italic,
+  sky-bordered `<p>` quote. Status control is a single cycling chip
+  button (not a `<select>`) wired to `state.ts`'s existing
+  `cycleSkillStatus` via `updateState` (synchronous save, no debounce)
+  — chose cycling over a dropdown since it matches the template's UX
+  and `cycleSkillStatus` was already built for it in Step 2; the chip's
+  `aria-label` announces the current status for accessibility since the
+  visible label only shows the current state, not that it's a control
+  with more states. No new shared component added (single-use markup,
+  no duplication elsewhere) per the no-premature-abstraction convention.
+  Wired into `App.tsx`'s skills tab slot, replacing the placeholder.
+  `npx tsc -b` and `npm run build` both pass clean. Verified with a
+  Playwright smoke script against the dev server: all 19 skill cards
+  render, clicking the status chip cycled "Not started" → "In progress"
+  → "Done" correctly, and the change persisted across a full page
+  reload with zero console errors. Dev server stopped afterward.
 - [ ] **Step 7 — Side Projects.** Two cards with milestone checklists +
   progress bars, same layout as template's Side Projects tab.
 - [ ] **Step 8 — Job Applications.** Add form + table/list, status
