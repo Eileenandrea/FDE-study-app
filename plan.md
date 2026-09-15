@@ -169,10 +169,43 @@ sessions.
   dev server (module transforms returned 200 with no compile errors) that
   the Dashboard tab renders the start-date prompt on first load (no
   persisted state yet), then stopped the dev server.
-- [ ] **Step 4 — Weekly Plan.** Accordion list styled after the
+- [x] **Step 4 — Weekly Plan.** Accordion list styled after the
   template's Route view (timeline rail + numbered circles), current
   week auto-expanded, 4 checkboxes per week, notes textarea,
   side-project note row, Python warm-up topic + link for weeks 1–4.
+  Built `src/views/WeeklyPlan.tsx`: single-expand accordion (only one
+  week open at a time, mirroring the template's `expandedWeek` state)
+  defaulting to the current week via `currentWeekFromStartDate`, with a
+  timeline rail and numbered circles (emerald when all 4 checkboxes
+  done, amber border for the current week). Each expanded card shows a
+  `dl` of course/practice/portfolio/interview/deliverable text, the
+  amber-highlighted `sideProjectNote` row when present (weeks 3–4
+  only), the four `courseDone`/`practiceDone`/`portfolioDone`/
+  `deliverableDone` checkboxes wired to `state.ts`'s `toggleWeekField`
+  via `updateState` (synchronous save), and a notes textarea. The
+  collapsed-row header shows a small `checkedCount/4` indicator using
+  both `ProgressBar` and text, reusing `Checkbox`/`ProgressBar` from
+  `src/components/` with no new shared components needed. The notes
+  textarea is its own small internal component (`WeekNotesField`)
+  holding local state for instant keystroke feedback, with a
+  `useRef`-based ~400ms debounce before calling `state.ts`'s
+  `setWeekNotes`/`updateState`, flushed via cleanup on unmount. For the
+  Python warm-up link on weeks 1–4: wired real click-to-switch-tab —
+  `App.tsx` already owned `setActiveTab`, so it was trivial to pass
+  down as an `onNavigate` prop to `WeeklyPlan`, which the "see Python
+  Warm-up tab" button calls with `'python-warmup'` (falls back to a
+  static label if `onNavigate` isn't supplied). Wired into `App.tsx`'s
+  weekly-plan tab slot, replacing the placeholder. `npx tsc -b` and
+  `npm run build` both pass clean. Verified with a Playwright smoke
+  script against the dev server (no project run-skill existed, so
+  `playwright` was installed ad hoc into the scratchpad dir and
+  chromium fetched via `npx playwright install chromium`): confirmed
+  all 17 week headers render, toggling the Week 10 course checkbox and
+  typing into its notes textarea produced no console errors, and both
+  the checkbox state and notes text persisted correctly across a full
+  page reload (round-tripping through `localStorage`); also confirmed
+  the Python warm-up tab-switch link on Week 1 correctly activates the
+  "Python Warm-up" tab. Dev server stopped afterward.
 - [ ] **Step 5 — Python Warm-up.** 4×7 grid or grouped checklist,
   streak counter (template's `Flame` stat), visually recede after week
   4 but keep data.

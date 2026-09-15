@@ -13,6 +13,7 @@ import type { AppState } from './types'
 import { loadState, saveState } from './storage'
 import { currentWeekFromStartDate } from './lib/date'
 import Dashboard from './views/Dashboard'
+import WeeklyPlan from './views/WeeklyPlan'
 
 interface Tab {
   id: string
@@ -105,6 +106,8 @@ function App() {
         <main>
           {active.id === 'dashboard' ? (
             <Dashboard state={state} updateState={updateState} />
+          ) : active.id === 'weekly-plan' ? (
+            <WeeklyPlan state={state} updateState={updateState} onNavigate={setActiveTab} />
           ) : (
             <div className="rounded-lg border border-slate-800 bg-slate-900 p-6">
               <p className="font-mono text-xs uppercase tracking-wide text-amber-400">
