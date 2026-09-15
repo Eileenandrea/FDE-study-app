@@ -259,8 +259,25 @@ sessions.
   render, clicking the status chip cycled "Not started" → "In progress"
   → "Done" correctly, and the change persisted across a full page
   reload with zero console errors. Dev server stopped afterward.
-- [ ] **Step 7 — Side Projects.** Two cards with milestone checklists +
+- [x] **Step 7 — Side Projects.** Two cards with milestone checklists +
   progress bars, same layout as template's Side Projects tab.
+  Built `src/views/SideProjects.tsx` as a 2-column card grid (name,
+  `weeks` badge, description, `ProgressBar` + `x/total milestones`
+  caption, then a milestone checklist) mirroring the template's Side
+  Projects tab almost verbatim, reusing `Checkbox`/`ProgressBar` from
+  `src/components/` with no new shared components needed; each milestone
+  `Checkbox` is wired to `state.ts`'s existing `toggleMilestone(state,
+  projectId, milestoneIndex)` via `updateState` (synchronous save, no
+  debounce, matching the checkbox convention from prior steps). Wired
+  into `App.tsx`'s side-projects tab slot, replacing the placeholder.
+  `npx tsc -b` and `npm run build` both pass clean. Verified with a
+  Playwright smoke script against the dev server: both project cards
+  render with correct names/descriptions and all 12 milestone checkboxes
+  (6 per project) present, toggling the first checkbox moved its
+  project's progress label from `0/6` to `1/6` milestones with zero
+  console errors, and the change persisted correctly across a full page
+  reload; toggled it back off afterward to leave state clean. Dev server
+  stopped afterward.
 - [ ] **Step 8 — Job Applications.** Add form + table/list, status
   `<select>`, sort by date desc, the "Applications typically start
   Week 11" notice gated on `currentWeek < 11` (per `CLAUDE.md`, not the

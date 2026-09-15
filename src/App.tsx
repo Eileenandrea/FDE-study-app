@@ -16,6 +16,7 @@ import Dashboard from './views/Dashboard'
 import WeeklyPlan from './views/WeeklyPlan'
 import PythonWarmup from './views/PythonWarmup'
 import Skills from './views/Skills'
+import SideProjects from './views/SideProjects'
 
 interface Tab {
   id: string
@@ -114,6 +115,8 @@ function App() {
             <PythonWarmup state={state} updateState={updateState} />
           ) : active.id === 'skills' ? (
             <Skills state={state} updateState={updateState} />
+          ) : active.id === 'side-projects' ? (
+            <SideProjects state={state} updateState={updateState} />
           ) : (
             <div className="rounded-lg border border-slate-800 bg-slate-900 p-6">
               <p className="font-mono text-xs uppercase tracking-wide text-amber-400">
