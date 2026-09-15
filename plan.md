@@ -133,8 +133,17 @@ sessions.
   Projects/Applications/Interview Mocks/Portfolio/Settings) with a
   per-tab "coming in Step N" placeholder content area; `npm run dev` and
   `npm run build` both verified working.
-- [ ] **Step 2 — Data layer.** `types.ts`, `seed.ts`, `storage.ts`,
+- [x] **Step 2 — Data layer.** `types.ts`, `seed.ts`, `storage.ts`,
   `state.ts`.
+  Built all five data-layer files (`types.ts`, `seed.ts`, `storage.ts`,
+  `state.ts`, `lib/date.ts`) with the verbatim 17-week/19-skill/2-side-project
+  seed content from `CLAUDE.md`; `state.ts` reducers are pure (no
+  `saveState` calls) per the contract, and job-application/interview-mock
+  `id`s are generated with `crypto.randomUUID()` (with a `Date.now()`-based
+  fallback). Portfolio artifact ids are slugified labels (e.g. "Flagship
+  repo" → `flagship-repo`) since `CLAUDE.md` didn't specify an id format,
+  just that it be stable. `npx tsc -b` passes clean. Not wired into
+  `App.tsx` yet — that's a later step.
 - [ ] **Step 3 — Dashboard.** Progress bar, current-week indicator,
   quick-count tiles (`StatTile`, `ProgressBar` from template),
   start-date prompt if unset, route-overview strip (17 circles instead
