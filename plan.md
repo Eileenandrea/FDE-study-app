@@ -1,0 +1,171 @@
+# Build Plan — FDE Roadmap Tracker
+
+## Sources and how they're used
+
+- **`CLAUDE.md` is the spec of record** for tech stack, data model, seed
+  content, feature list/order, and conventions. Where anything conflicts,
+  `CLAUDE.md` wins.
+- **`fde-roadmap-app.jsx` is a visual/UX template only.** It's a single-file
+  prototype with its own invented data (18 weeks, per-day tasks, a "Today"
+  tab) that doesn't match `CLAUDE.md`'s data model. We reuse its **look and
+  component patterns** — dark slate/sky/amber theme, card layout, tab nav,
+  checkbox/progress-bar/badge components, accordion week list — and rebuild
+  them against `CLAUDE.md`'s actual 17-week, weekly-checkbox data model.
+
+### Known mismatch to resolve (not carry over)
+
+| In the JSX template | In `CLAUDE.md` (source of truth) |
+|---|---|
+| 18 weeks | **17 weeks** |
+| Daily task grid for every week (126 days), "Today" tab | Only **weekly** checkboxes (course/practice/portfolio/deliverable) for weeks 5–17; **daily** granularity only exists for the **Python warm-up**, weeks 1–4 |
+| `TYPE_META` day-type badges (course/practice/build/ship/...) | Not part of the spec — drop |
+| In-memory `useState` only | Must persist to `localStorage` via `storage.ts` |
+
+Decision: build the 17-week weekly model with the JSX's visual style. The
+"Today"-tab concept and per-day task badges are dropped; the Python
+Warm-up view absorbs the daily-checklist/streak UX from the template
+(`streak`, day grid) since that's the one place `CLAUDE.md` actually wants
+daily granularity.
+
+## Tech stack
+
+- React + TypeScript + Vite (`npm create vite@latest . -- --template react-ts`)
+- Tailwind CSS (utility classes only, dark theme carried over from the
+  template: `slate-950/900/800` surfaces, `sky-400/500` primary accent,
+  `amber-400` highlight/current-item accent, `emerald-500` done/success)
+- `lucide-react` for icons (already used in the template)
+- No backend, no router, no state library — `localStorage` + a top-level
+  `useState<AppState>`
+
+## File structure
+
+```
+src/
+  main.tsx
+  App.tsx                     # tab state, loads AppState once, renders active view
+  types.ts                    # interfaces from CLAUDE.md, verbatim
+  seed.ts                     # getInitialState(): AppState, verbatim seed content
+  storage.ts                  # load(), save(state), reset() — localStorage, JSON
+  state.ts                    # update helpers (toggleWeekField, setSkillStatus,
+                               #   toggleMilestone, addApplication, etc.) operating
+                               #   on AppState, calling storage.save after each mutation
+  lib/date.ts                 # diffDays, clamp, currentWeekFromStartDate
+  components/
+    Checkbox.tsx               # from template, tone prop (sky/amber/emerald)
+    ProgressBar.tsx            # from template
+    Badge.tsx                  # generic label badge (status chips, mock-type chips)
+    TabNav.tsx                 # icon+label tab bar from template
+    StatTile.tsx                # icon + big number + caption (dashboard quick counts)
+    ConfirmButton.tsx          # two-step confirm, used by Settings reset
+  views/
+    Dashboard.tsx              # feature 1
+    WeeklyPlan.tsx             # feature 2 (accordion of 17 weeks)
+    PythonWarmup.tsx           # feature 3 (4x7 grid + streak)
+    Skills.tsx                 # feature 4
+    SideProjects.tsx           # feature 5
+    JobApplications.tsx        # feature 6
+    InterviewMocks.tsx         # feature 7
+    PortfolioArtifacts.tsx     # feature 8
+    Settings.tsx               # feature 9
+index.css                      # Tailwind directives
+```
+
+## Data model & seed
+
+- Port `AppState`, `Week`, `Skill`, `SideProjectMilestone`, `SideProject`,
+  `PythonWarmupDay`, `JobApplication`, `InterviewMock`, `PortfolioArtifact`
+  into `src/types.ts` exactly as specified in `CLAUDE.md`.
+- Port the 17-week table, 19 skills, 2 side projects (with real milestone
+  labels), 28 Python warm-up rows, and 9 pre-seeded portfolio artifact rows
+  into `src/seed.ts`'s `getInitialState()`, using the exact content given
+  in `CLAUDE.md` (not the JSX's invented 18-week text).
+- `jobApplications`, `interviewMocks` start as `[]`.
+
+## `storage.ts` / `state.ts` contract
+
+- `storage.ts`: `STORAGE_KEY` constant, `loadState(): AppState` (returns
+  `getInitialState()` if nothing in `localStorage` or JSON parse fails),
+  `saveState(state: AppState): void`, `resetState(): AppState` (clears key,
+  returns fresh seed).
+- `state.ts`: pure `(state, ...args) => AppState` reducers for every
+  mutation (week checkbox toggle, week notes edit, skill status cycle,
+  milestone toggle, python warmup day toggle, add/update/remove job
+  application, add/remove interview mock, update portfolio artifact,
+  set start date). `App.tsx` wraps each call: `setState(next); saveState(next)`.
+- Text-field mutations (notes, URLs) debounce the `saveState` call
+  (~400ms); everything else (checkboxes/selects) saves synchronously,
+  per `CLAUDE.md`.
+
+## Derived values (reuse template's math, recompute against 17 weeks)
+
+- `currentWeek = clamp(Math.ceil((diffDays(startDate, today) + 1) / 7), 1, 17)`
+- Overall progress % = completed week-checkbox count (4 per week × 17 =
+  68 max) / 68 — mirrors the template's `overallPct` but against weekly
+  checkboxes instead of days.
+- Python warm-up streak = consecutive `done` days counting back from
+  today's computed warm-up day (only meaningful during weeks 1–4;
+  template's `streak` logic adapts directly).
+- Skills done / 19, applications count, mocks count, side-project
+  milestones done/total — same shape as the template's dashboard tiles.
+
+## Build order (matches `CLAUDE.md` §"Features to build")
+
+Status legend: `[ ]` not started, `[x]` done. Each step's entry gets a
+one-line note appended when completed (what was built, any deviation).
+Each step is built end-to-end (code + commit + push) before the next
+starts — treat this file as the single handoff artifact between build
+sessions.
+
+- [ ] **Step 1 — Scaffold.** Vite React-TS app, Tailwind config,
+  `lucide-react`, base layout (header + tab nav + content) styled per
+  the template.
+- [ ] **Step 2 — Data layer.** `types.ts`, `seed.ts`, `storage.ts`,
+  `state.ts`.
+- [ ] **Step 3 — Dashboard.** Progress bar, current-week indicator,
+  quick-count tiles (`StatTile`, `ProgressBar` from template),
+  start-date prompt if unset, route-overview strip (17 circles instead
+  of 18, no day dots).
+- [ ] **Step 4 — Weekly Plan.** Accordion list styled after the
+  template's Route view (timeline rail + numbered circles), current
+  week auto-expanded, 4 checkboxes per week, notes textarea,
+  side-project note row, Python warm-up topic + link for weeks 1–4.
+- [ ] **Step 5 — Python Warm-up.** 4×7 grid or grouped checklist,
+  streak counter (template's `Flame` stat), visually recede after week
+  4 but keep data.
+- [ ] **Step 6 — Skills.** Cards styled after template's Skills tab;
+  status chip cycles not_started → in_progress → done; "stop learning
+  when" shown as a highlighted quote line (template's italic bordered
+  `<p>`).
+- [ ] **Step 7 — Side Projects.** Two cards with milestone checklists +
+  progress bars, same layout as template's Side Projects tab.
+- [ ] **Step 8 — Job Applications.** Add form + table/list, status
+  `<select>`, sort by date desc, the "Applications typically start
+  Week 11" notice gated on `currentWeek < 11` (per `CLAUDE.md`, not the
+  template's 12).
+- [ ] **Step 9 — Interview Mocks.** Add form + log list + running
+  counts by type.
+- [ ] **Step 10 — Portfolio Artifacts.** Checklist with editable URL
+  inputs, styled after template's Portfolio tab.
+- [ ] **Step 11 — Settings.** Start-date picker, two-step "reset all
+  data" button (`ConfirmButton`) that calls `resetState()` and reloads.
+- [ ] **Step 12 — Persistence correctness pass.** Verify every mutation
+  round-trips through `localStorage` (manual check: toggle things,
+  reload page, confirm state survives); verify first-load-with-no-key
+  seeds correctly.
+
+## Handoff protocol for each step
+
+Each step is executed by a fresh agent with no memory of prior steps. On
+entry, that agent must: read this `plan.md` in full, read `CLAUDE.md`,
+find the first `[ ]` step, and inspect the current repo state (it cannot
+trust the plan's prose alone — verify what actually exists on disk before
+building on it). On exit, it must: flip that step's checkbox to `[x]` and
+append a one-line implementation note, `git add` the relevant files
+(never `git add -A`/`.`), commit with a message describing the step, and
+`git push` to `origin main`. Do not start the next step in the same
+agent run.
+
+## Explicit non-goals (carried from `CLAUDE.md`)
+
+No accounts/backend/cloud sync, no drag-and-drop, no notifications/
+reminders/calendar integration, no test suite, no routing library.
