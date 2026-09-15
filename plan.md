@@ -417,10 +417,59 @@ sessions.
   immediately after reset and after one additional manual reload — with
   zero console errors throughout. Dev server was stopped via its
   specific PID from `netstat`.
-- [ ] **Step 12 — Persistence correctness pass.** Verify every mutation
+- [x] **Step 12 — Persistence correctness pass.** Verify every mutation
   round-trips through `localStorage` (manual check: toggle things,
   reload page, confirm state survives); verify first-load-with-no-key
   seeds correctly.
+  Read every file under `src/` (all 9 views, all 6 components, `state.ts`,
+  `storage.ts`, `seed.ts`, `lib/date.ts`, `App.tsx`) against `CLAUDE.md`,
+  then drove the real app end-to-end with a 35-assertion Playwright script
+  (reusing the ad-hoc `playwright` + chromium install in the scratchpad dir
+  from prior steps) against the dev server, covering: first-load seeding
+  (17 weeks, 19 skills, 2 side projects with correct milestones, 28
+  Python warmup days, empty applications/mocks, 9 portfolio artifacts,
+  the unset-`startDate` Dashboard prompt), a full round-trip-after-reload
+  for every mutation type (week checkboxes + notes, warmup day toggles,
+  skill status cycling, milestone toggles, job application add/status/
+  notes/delete, interview mock add/delete, portfolio artifact checkbox +
+  URL, start-date change, full reset), and cross-view consistency
+  (start-date change propagating to the header, Dashboard, Weekly Plan's
+  default-expanded week, Job Applications' Week-11 note, and Interview
+  Mocks' default week; checkbox/milestone/skill changes propagating to
+  Dashboard's progress bar and quick-count tiles). `npx tsc -b` and
+  `npm run build` both confirmed clean, and zero console errors occurred
+  during the full run. Found and fixed one real bug: `WeekNotesField`
+  (`src/views/WeeklyPlan.tsx`), `ApplicationNotesField`
+  (`src/views/JobApplications.tsx`), and `ArtifactUrlField`
+  (`src/views/PortfolioArtifacts.tsx`) each debounce their `saveState`
+  call ~400ms behind keystrokes, but their unmount cleanup only called
+  `clearTimeout` — it never flushed the pending value, so typing into a
+  notes/URL field and switching tabs (or, for `WeekNotesField`,
+  collapsing that week's accordion row) within the debounce window
+  silently discarded the edit. Fixed all three identically: added
+  `valueRef`/`onSaveRef` refs kept current via `useEffect`, and the
+  unmount cleanup now calls `onSaveRef.current(valueRef.current)` before
+  clearing the timeout if a save was still pending. Added three targeted
+  regression assertions (type text, wait less than the debounce window,
+  switch tabs, reload, confirm the text persisted) that failed before the
+  fix and pass after it. No other bugs found — the reset flow already
+  does a full `window.location.reload()` so no view is left with stale
+  local component state, and every view already handles an unset
+  `startDate` (`currentWeekFromStartDate` returning `null`) gracefully.
+
+### Build complete
+
+All 12 steps are done. The app is feature-complete per `CLAUDE.md`'s spec:
+all 9 views are built and wired into `App.tsx`, every mutation persists to
+`localStorage` (instantly for checkboxes/selects, debounced-with-flush for
+free-text fields), and Step 12 verified first-load seeding, full-reload
+round-tripping, and cross-view consistency end-to-end with zero console
+errors. It's ready for daily use. One known deviation remains on record:
+Step 1 downgraded `vite@8.3.0` (auto-installed, rolldown-based, requires
+Node ≥20.19/22.12) to `vite@6.4.3` + `@vitejs/plugin-react@4.7.0` because
+this machine runs Node 20.17. No new deviations came out of the Step 12
+pass beyond the three debounce-unmount-flush bugs already noted above,
+which were fixed in place.
 
 ## Handoff protocol for each step
 

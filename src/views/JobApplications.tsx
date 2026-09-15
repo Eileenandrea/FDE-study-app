@@ -52,10 +52,30 @@ function ApplicationNotesField({
 }) {
   const [value, setValue] = useState(notes);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Kept in refs (rather than read from closure) so the unmount-flush effect
+  // below always sees the latest keystroke/value, not whichever were current
+  // when the mount-time effect closure was created.
+  const valueRef = useRef(value);
+  const onSaveRef = useRef(onSave);
 
   useEffect(() => {
+    valueRef.current = value;
+  }, [value]);
+
+  useEffect(() => {
+    onSaveRef.current = onSave;
+  }, [onSave]);
+
+  // Flush any pending debounced save on unmount (e.g. switching tabs, or
+  // deleting this row) instead of silently discarding it — previously this
+  // only cleared the timeout, dropping the last edit if it happened within
+  // the debounce window.
+  useEffect(() => {
     return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        onSaveRef.current(valueRef.current);
+      }
     };
   }, []);
 
