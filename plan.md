@@ -144,10 +144,31 @@ sessions.
   repo" → `flagship-repo`) since `CLAUDE.md` didn't specify an id format,
   just that it be stable. `npx tsc -b` passes clean. Not wired into
   `App.tsx` yet — that's a later step.
-- [ ] **Step 3 — Dashboard.** Progress bar, current-week indicator,
+- [x] **Step 3 — Dashboard.** Progress bar, current-week indicator,
   quick-count tiles (`StatTile`, `ProgressBar` from template),
   start-date prompt if unset, route-overview strip (17 circles instead
   of 18, no day dots).
+  Wired `App.tsx` to `loadState()` on mount into a top-level `useState`,
+  added an `updateState(updater)` helper that applies a pure `state.ts`
+  reducer and calls `saveState` synchronously, and passed `state`/
+  `updateState` down to `Dashboard` via props. Built
+  `src/components/Checkbox.tsx` (sky/amber/emerald tone prop),
+  `ProgressBar.tsx`, and `StatTile.tsx` (icon + value + caption) ported
+  from the JSX template's look. `src/views/Dashboard.tsx` implements the
+  unset-`startDate` prompt inline (date input + button calling
+  `state.ts`'s `setStartDate` reducer, since Settings doesn't exist
+  yet), the 68-checkbox overall progress bar, current-week indicator via
+  `currentWeekFromStartDate`, four `StatTile` quick counts (skills done/19,
+  applications sent, mocks completed, side-project milestones done/total),
+  and a 17-circle route-overview strip (emerald = all 4 week checkboxes
+  done, amber = current week, slate = other) with a `title` tooltip per
+  circle; circles are inert (no navigation) since Weekly Plan doesn't
+  exist until Step 4. `App.tsx`'s header current-week badge now reads
+  live from state instead of the "--/set start date" placeholder.
+  `npx tsc -b` and `npm run build` both pass clean; verified via the Vite
+  dev server (module transforms returned 200 with no compile errors) that
+  the Dashboard tab renders the start-date prompt on first load (no
+  persisted state yet), then stopped the dev server.
 - [ ] **Step 4 — Weekly Plan.** Accordion list styled after the
   template's Route view (timeline rail + numbered circles), current
   week auto-expanded, 4 checkboxes per week, notes textarea,

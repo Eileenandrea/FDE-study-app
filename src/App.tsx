@@ -9,6 +9,10 @@ import {
   Settings as SettingsIcon,
   Target,
 } from 'lucide-react'
+import type { AppState } from './types'
+import { loadState, saveState } from './storage'
+import { currentWeekFromStartDate } from './lib/date'
+import Dashboard from './views/Dashboard'
 
 interface Tab {
   id: string
@@ -31,7 +35,21 @@ const TABS: Tab[] = [
 
 function App() {
   const [activeTab, setActiveTab] = useState<string>(TABS[0].id)
+  const [state, setState] = useState<AppState>(() => loadState())
   const active = TABS.find((t) => t.id === activeTab) ?? TABS[0]
+
+  // Every mutation goes through here: apply the pure reducer, update React
+  // state, then persist immediately to localStorage (per CLAUDE.md, all but
+  // debounced text fields save synchronously).
+  function updateState(updater: (state: AppState) => AppState) {
+    setState((prev) => {
+      const next = updater(prev)
+      saveState(next)
+      return next
+    })
+  }
+
+  const currentWeek = currentWeekFromStartDate(state.startDate, new Date())
 
   return (
     <div className="min-h-screen w-full bg-slate-950 text-slate-100 font-sans">
@@ -47,10 +65,14 @@ function App() {
             </h1>
           </div>
           <div className="flex items-center gap-3 rounded-lg border border-slate-800 bg-slate-900 px-4 py-2">
-            <span className="font-mono text-lg text-sky-400">--</span>
+            <span className="font-mono text-lg text-sky-400">
+              {currentWeek === null ? '--' : String(currentWeek).padStart(2, '0')}
+            </span>
             <div className="text-xs leading-tight text-slate-400">
-              <div>current week</div>
-              <div className="font-mono text-slate-300">set start date</div>
+              <div>{currentWeek === null ? 'current week' : 'week of 17'}</div>
+              <div className="font-mono text-slate-300">
+                {currentWeek === null ? 'set start date' : `week ${currentWeek}`}
+              </div>
             </div>
           </div>
         </header>
@@ -79,14 +101,20 @@ function App() {
           })}
         </nav>
 
-        {/* content placeholder */}
-        <main className="rounded-lg border border-slate-800 bg-slate-900 p-6">
-          <p className="font-mono text-xs uppercase tracking-wide text-amber-400">
-            {active.label}
-          </p>
-          <p className="mt-2 text-sm text-slate-400">
-            {active.label} view — coming in Step {active.comingInStep}.
-          </p>
+        {/* content */}
+        <main>
+          {active.id === 'dashboard' ? (
+            <Dashboard state={state} updateState={updateState} />
+          ) : (
+            <div className="rounded-lg border border-slate-800 bg-slate-900 p-6">
+              <p className="font-mono text-xs uppercase tracking-wide text-amber-400">
+                {active.label}
+              </p>
+              <p className="mt-2 text-sm text-slate-400">
+                {active.label} view — coming in Step {active.comingInStep}.
+              </p>
+            </div>
+          )}
         </main>
       </div>
     </div>
