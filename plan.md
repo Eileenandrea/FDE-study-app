@@ -353,8 +353,33 @@ sessions.
   reload, and deleting it restored the empty state — persisting
   correctly across another reload — with zero console errors throughout.
   Dev server was stopped via its specific PID from `netstat`.
-- [ ] **Step 10 — Portfolio Artifacts.** Checklist with editable URL
+- [x] **Step 10 — Portfolio Artifacts.** Checklist with editable URL
   inputs, styled after template's Portfolio tab.
+  Built `src/views/PortfolioArtifacts.tsx` as a single checklist of the 9
+  pre-seeded `state.portfolioArtifacts` rows, matching the JSX template's
+  row layout almost verbatim (label + `Checkbox` in a fixed-width column,
+  flex-1 URL `input` beside it, stacking on mobile). Each row's `Checkbox`
+  is wired to `state.ts`'s existing `updatePortfolioArtifact(state, id, {
+  done })` via `updateState` (synchronous save, matching every other
+  checkbox in the app). The URL input is a local `ArtifactUrlField`
+  component copying `JobApplications.tsx`'s `ApplicationNotesField`
+  debounce pattern verbatim (local state for instant keystrokes, ~400ms
+  debounced `updatePortfolioArtifact(state, id, { url })` call, cleared
+  timeout on unmount) since `CLAUDE.md` groups URLs with other free-text
+  fields under the debounce convention. Added a small `x/9 artifacts done`
+  caption above the list (no `ProgressBar`, since `CLAUDE.md`'s spec for
+  this feature only calls for a checklist, not a progress bar — kept the
+  diff scoped). Wired into `App.tsx`'s portfolio tab slot, replacing the
+  placeholder. `npx tsc -b` and `npm run build` both pass clean. Verified
+  with a Playwright smoke script against the dev server (reused the
+  ad-hoc `playwright` + chromium install from prior steps' scratchpad
+  dir): all 9 artifact rows render with correct labels, toggling the
+  first checkbox flipped `aria-pressed` and updated the `0/9 → 1/9` done
+  count, typing a URL into the first row and reloading confirmed both the
+  checkbox and URL persisted through `localStorage` with zero console
+  errors, then reverted both test edits (unchecked the box, cleared the
+  URL) and confirmed the revert also persisted cleanly (`0/9`, empty URL)
+  before stopping the dev server via its specific PID from `netstat`.
 - [ ] **Step 11 — Settings.** Start-date picker, two-step "reset all
   data" button (`ConfirmButton`) that calls `resetState()` and reloads.
 - [ ] **Step 12 — Persistence correctness pass.** Verify every mutation
