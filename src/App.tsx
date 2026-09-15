@@ -14,6 +14,7 @@ import { loadState, saveState } from './storage'
 import { currentWeekFromStartDate } from './lib/date'
 import Dashboard from './views/Dashboard'
 import WeeklyPlan from './views/WeeklyPlan'
+import PythonWarmup from './views/PythonWarmup'
 
 interface Tab {
   id: string
@@ -108,6 +109,8 @@ function App() {
             <Dashboard state={state} updateState={updateState} />
           ) : active.id === 'weekly-plan' ? (
             <WeeklyPlan state={state} updateState={updateState} onNavigate={setActiveTab} />
+          ) : active.id === 'python-warmup' ? (
+            <PythonWarmup state={state} updateState={updateState} />
           ) : (
             <div className="rounded-lg border border-slate-800 bg-slate-900 p-6">
               <p className="font-mono text-xs uppercase tracking-wide text-amber-400">

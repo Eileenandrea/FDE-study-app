@@ -206,9 +206,37 @@ sessions.
   page reload (round-tripping through `localStorage`); also confirmed
   the Python warm-up tab-switch link on Week 1 correctly activates the
   "Python Warm-up" tab. Dev server stopped afterward.
-- [ ] **Step 5 — Python Warm-up.** 4×7 grid or grouped checklist,
+- [x] **Step 5 — Python Warm-up.** 4×7 grid or grouped checklist,
   streak counter (template's `Flame` stat), visually recede after week
   4 but keep data.
+  Built `src/views/PythonWarmup.tsx` as a literal 4×7 grid (an
+  `overflow-x-auto` table: 4 rows for weeks 1–4, columns D1–D7, each cell
+  a `Checkbox` wired to `state.ts`'s existing `togglePythonWarmupDay` via
+  `updateState`) rather than a grouped checklist, since a real grid was
+  no fussier to build and matches `CLAUDE.md`'s wording more directly;
+  the current warm-up week's row gets a subtle amber tint. Extended
+  `src/lib/date.ts` with `WARMUP_TOTAL_DAYS`, `currentWarmupDayIndex`
+  (daily-granularity analog of `currentWeekFromStartDate`, clamped to
+  1–28) and `warmupIndexToWeekDay`, rather than duplicating day-index
+  math inline in the view. The streak counter (`Flame` `StatTile`, tone
+  amber) walks backward day-by-day from `currentWarmupDayIndex` through
+  `state.pythonWarmup`, stopping at the first not-done day, mirroring
+  the template's `streak`/`dayKey` walk-back but anchored on the 28-day
+  warm-up range instead of the template's whole-roadmap day index. Two
+  more `StatTile`s show total days completed (x/28) and the current
+  warm-up week. De-emphasis: when `currentWeekFromStartDate > 4`, a
+  muted banner ("Week 4 has passed — this section is for reference...")
+  appears above the grid and the grid itself gets `opacity-70` — data
+  stays fully visible and checkboxes remain clickable, nothing is
+  hidden or deleted. Wired into `App.tsx`'s python-warmup tab slot,
+  replacing the placeholder. `npx tsc -b` and `npm run build` both pass
+  clean. Verified with a Playwright smoke script against the dev
+  server: confirmed all 4 week rows and all 28 checkboxes render with
+  correct topics, toggling checkboxes produced no console/page errors,
+  and the streak counter behaved correctly (0 → 4 after marking a
+  4-day run done from a simulated start date, → 2 after un-marking a
+  middle day, confirming the backward-walk-and-break logic). Dev
+  server stopped afterward.
 - [ ] **Step 6 — Skills.** Cards styled after template's Skills tab;
   status chip cycles not_started → in_progress → done; "stop learning
   when" shown as a highlighted quote line (template's italic bordered
