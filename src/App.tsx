@@ -20,6 +20,7 @@ import SideProjects from './views/SideProjects'
 import JobApplications from './views/JobApplications'
 import InterviewMocks from './views/InterviewMocks'
 import PortfolioArtifacts from './views/PortfolioArtifacts'
+import Settings from './views/Settings'
 
 interface Tab {
   id: string
@@ -127,14 +128,7 @@ function App() {
           ) : active.id === 'portfolio' ? (
             <PortfolioArtifacts state={state} updateState={updateState} />
           ) : (
-            <div className="rounded-lg border border-slate-800 bg-slate-900 p-6">
-              <p className="font-mono text-xs uppercase tracking-wide text-amber-400">
-                {active.label}
-              </p>
-              <p className="mt-2 text-sm text-slate-400">
-                {active.label} view — coming in Step {active.comingInStep}.
-              </p>
-            </div>
+            <Settings state={state} updateState={updateState} />
           )}
         </main>
       </div>

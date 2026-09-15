@@ -380,8 +380,43 @@ sessions.
   errors, then reverted both test edits (unchecked the box, cleared the
   URL) and confirmed the revert also persisted cleanly (`0/9`, empty URL)
   before stopping the dev server via its specific PID from `netstat`.
-- [ ] **Step 11 — Settings.** Start-date picker, two-step "reset all
+- [x] **Step 11 — Settings.** Start-date picker, two-step "reset all
   data" button (`ConfirmButton`) that calls `resetState()` and reloads.
+  Built `src/components/ConfirmButton.tsx` as the planned reusable
+  two-click confirm component (first click arms it, label swaps to
+  "Are you sure? Click to confirm" for 4s, second click fires the
+  callback; auto-reverts if not confirmed) rather than `window.confirm()`,
+  since it matches the template's inline styling and is easier to drive
+  in automated smoke tests than a native dialog. Built
+  `src/views/Settings.tsx`: a start-date `input[type=date]` bound
+  directly to `state.startDate` and wired synchronously to `state.ts`'s
+  existing `setStartDate` via `updateState` (same reducer
+  `Dashboard.tsx`'s inline prompt uses, so the two stay in sync; no new
+  reducer needed), plus a "Danger zone" section using `ConfirmButton` to
+  call `storage.ts`'s existing `resetState()` (clears the `localStorage`
+  key, returns a fresh seed) followed by `window.location.reload()` —
+  chose a full reload over updating `App.tsx`'s top-level state in place
+  because several views (Weekly Plan's notes, Job Applications', and
+  Portfolio Artifacts' debounced text fields) hold their own local
+  component state that a state-only reset wouldn't touch; a reload
+  guarantees every view remounts clean. Wired into `App.tsx`'s settings
+  tab slot, replacing the last placeholder — the ternary's fallback
+  branch is now `<Settings .../>` directly, so no "coming in Step N"
+  placeholder remains anywhere in the app. `npx tsc -b` and `npm run
+  build` both pass clean. Verified with a Playwright smoke script
+  against the dev server: toggled Week 1's course checkbox as test
+  state, then in Settings changed the start date to `2026-01-05` and
+  confirmed the Dashboard header recomputed to "week 17" (correctly
+  clamped), confirmed the new date persisted through a full page reload,
+  then ran the reset flow (first click armed the confirm state, second
+  click fired it) and confirmed: the `localStorage` key was removed
+  (stays absent until the next mutation, since `loadState()` only reads
+  — not a bug, `resetState()` doesn't re-write it), the earlier Week 1
+  checkbox toggle was gone (back to unchecked) on the Weekly Plan tab,
+  and the Dashboard showed the "Set your start date" prompt again both
+  immediately after reset and after one additional manual reload — with
+  zero console errors throughout. Dev server was stopped via its
+  specific PID from `netstat`.
 - [ ] **Step 12 — Persistence correctness pass.** Verify every mutation
   round-trips through `localStorage` (manual check: toggle things,
   reload page, confirm state survives); verify first-load-with-no-key
